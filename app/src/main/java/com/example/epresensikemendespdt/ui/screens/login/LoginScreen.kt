@@ -1,5 +1,7 @@
 package com.example.epresensikemendespdt.ui.screens.login
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -17,12 +19,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -30,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -38,20 +44,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.epresensikemendespdt.R
+import com.example.epresensikemendespdt.data.Result
+import com.example.epresensikemendespdt.data.remote.response.LoginResponse
 import kotlin.text.ifEmpty
 
 @Composable
 fun LoginScreen(
+    loginViewModel: LoginViewModel,
     onLoginSuccess: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-//    val context = LocalContext.current
-//    val authDataStore = remember { AuthDataStore(context) }
-//    val viewModel : LoginViewModel = viewModel(
-//        factory = LoginViewModelFactory(authDataStore)
-//    )
-//
-//    val loginState by viewModel.loginState.collectAsState()
+    val TAG = "LoginScreen"
+
+//    val loginResponse = loginViewModel.loginResponse.value
+    val loginResponse by loginViewModel.loginResponse.observeAsState()
+    val isLoading by loginViewModel.isLoading.observeAsState()
+    val errorMessage by loginViewModel.errorMessage.observeAsState()
+
+    val context = LocalContext.current
+
+    Log.e(TAG, loginResponse.toString())
 
     var username by remember { mutableStateOf( "") }
     var password by remember { mutableStateOf( "") }
@@ -60,16 +72,41 @@ fun LoginScreen(
     var usernameError by remember { mutableStateOf("") }
     var passwordError by remember { mutableStateOf("") }
 
-//    LaunchedEffect(loginState) {
-//        when(loginState) {
-//            is LoginState.Success -> {
-//                onLoginSuccess()
-//                viewModel.resetState()
+    loginResponse?.let { response ->
+        LaunchedEffect(response.data.token) {
+            loginViewModel.saveToken(response.data.token, response.data.user_id.toString())
+            onLoginSuccess()
+        }
+    }
+
+    errorMessage?.let { message ->
+        LaunchedEffect(message) {
+            Toast.makeText(
+                context,
+                message,
+                Toast.LENGTH_SHORT)
+                .show()
+        }
+    }
+//    LaunchedEffect(loginResponse) {
+//        when (loginResponse) {
+//            is Result.Error -> {
+//                Toast.makeText(
+//                    context,
+//                    loginResponse.message,
+//                    Toast.LENGTH_SHORT
+//                ).show()
 //            }
-//            is LoginState.Error -> {
 //
+//            is Result.Success<*> -> {
+//                loginViewModel.saveToken(
+//                    token = loginResponse.data.token,
+//                    user_id = loginResponse.data.user_id.toString()
+//                )
+//                onLoginSuccess()
 //            }
-//            else -> {}
+//
+//            else -> Unit
 //        }
 //    }
 
@@ -122,8 +159,8 @@ fun LoginScreen(
 
 
                     TextField(
-                        value = "username",
-                        onValueChange = {username = it},
+                        value = username,
+                        onValueChange = { username = it },
                         label = { Text(usernameError.ifEmpty { "Username" }, color = if (usernameError.isNotEmpty()) Color.Red else Color.DarkGray) },
                         leadingIcon = {
                             Icon(Icons.Rounded.AccountCircle,
@@ -137,8 +174,8 @@ fun LoginScreen(
                     )
 
                     TextField(
-                        value = "password",
-                        onValueChange = {password = it},
+                        value = password,
+                        onValueChange = { password = it },
                         label = { Text(passwordError.ifEmpty { "Password" }, color = if (passwordError.isNotEmpty()) Color.Red else Color.DarkGray) },
                         leadingIcon = {
                             Icon(Icons.Rounded.Lock,
@@ -164,38 +201,32 @@ fun LoginScreen(
                             focusedContainerColor = Transparent,
                             unfocusedIndicatorColor = Transparent
                         ),
-                        //enabled = loginState !is LoginState.Loading
                     )
-
-//                    if (loginState is LoginState.Error) {
-//                        Text(
-//                            text = (loginState as LoginState.Error).message,
-//                            color = Color.Red,
-//                            modifier = modifier
-//                                .fillMaxWidth()
-//                                .padding(start = 10.dp, end = 10.dp, bottom = 16.dp),
-//                            textAlign = TextAlign.Center
-//                        )
-//                    }
 
                     Button(
                         onClick = {
-//                            var isValid = true
-//
-//                            if (username.isBlank()) {
-//                                usernameError = "Username tidak boleh kosong"
-//                                isValid = false
-//                            }
-//
-//                            if (password.isBlank()) {
-//                                passwordError = "Password tidak boleh kosong"
-//                                isValid = false
-//                            }
-//
-//                            if (isValid) {
-//                                viewModel.login(username, password)
-//                            }
-                            onLoginSuccess()
+                            when {
+                                username.isBlank() -> {
+                                    Toast.makeText(
+                                        context,
+                                        "Username tidak boleh kosong",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+
+                                password.isBlank() -> {
+                                    Toast.makeText(
+                                        context,
+                                        "Username tidak boleh kosong",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+
+                                else -> {
+                                    loginViewModel.postLogin(username, password)
+                                }
+                            }
+
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF047BEC)),
                         shape = RoundedCornerShape(8.dp),
@@ -211,6 +242,10 @@ fun LoginScreen(
                         )
                     }
 
+//                    if (loginResponse is Result.Loading) {
+//                        CircularProgressIndicator()
+//                    }
+
                     Image(
                         painter = painterResource(id = R.drawable.logo_kemendesa),
                         contentDescription = null,
@@ -218,6 +253,10 @@ fun LoginScreen(
                             .fillMaxWidth()
                             .padding(30.dp)
                     )
+
+                    if (isLoading == true) {
+                        CircularProgressIndicator()
+                    }
                 }
             }
         }

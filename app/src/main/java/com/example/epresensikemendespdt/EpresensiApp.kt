@@ -1,5 +1,6 @@
 package com.example.epresensikemendespdt
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -14,19 +15,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.epresensikemendespdt.data.local.token.TokenPreferences
 import com.example.epresensikemendespdt.ui.navigation.NavigationItem
 import com.example.epresensikemendespdt.ui.navigation.Screen
 import com.example.epresensikemendespdt.ui.screens.home.HomeScreen
 import com.example.epresensikemendespdt.ui.screens.login.LoginScreen
+import com.example.epresensikemendespdt.ui.screens.login.LoginViewModel
+import com.example.epresensikemendespdt.ui.screens.login.LoginViewModelFactory
 import com.example.epresensikemendespdt.ui.screens.maps.MapScreen
 import com.example.epresensikemendespdt.ui.screens.presensi.PresensiScreen
 import com.example.epresensikemendespdt.ui.screens.profile.ProfileScreen
+import kotlin.math.log
+
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "token")
 
 @Composable
 fun EpresensiApp(
@@ -35,6 +48,9 @@ fun EpresensiApp(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    val context = LocalContext.current
+    val pref = TokenPreferences.getInstance(context.dataStore)
 
     Scaffold(
         bottomBar = {
@@ -88,7 +104,12 @@ fun EpresensiApp(
             }
 
             composable(Screen.Login.route) {
+                val loginViewModel: LoginViewModel = viewModel(
+                    factory = LoginViewModelFactory(pref)
+                )
+
                 LoginScreen(
+                    loginViewModel = loginViewModel,
                     onLoginSuccess = {
                         navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.Login.route) {
