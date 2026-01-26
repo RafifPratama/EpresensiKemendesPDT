@@ -10,8 +10,6 @@ import com.example.epresensikemendespdt.data.local.token.TokenPreferences
 import com.example.epresensikemendespdt.data.remote.request.LoginRequest
 import com.example.epresensikemendespdt.data.remote.response.LoginResponse
 import com.example.epresensikemendespdt.data.remote.retrofit.ApiConfig
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Response
@@ -64,6 +62,7 @@ class LoginViewModel(private val pref: TokenPreferences) : ViewModel(){
                 Log.e(TAG, "onFailure3: ${t.message.toString()}")
             }
         })
+        _isLoading.value = false
     }
 
     fun getToken() : LiveData<String> {

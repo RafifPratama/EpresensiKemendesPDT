@@ -75,6 +75,11 @@ fun LoginScreen(
     loginResponse?.let { response ->
         LaunchedEffect(response.data.token) {
             loginViewModel.saveToken(response.data.token, response.data.user_id.toString())
+            Toast.makeText(
+                context,
+                "Berhasil Login",
+                Toast.LENGTH_SHORT
+            ).show()
             onLoginSuccess()
         }
     }
@@ -120,6 +125,10 @@ fun LoginScreen(
             modifier = modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
+
+        if (isLoading == true) {
+            CircularProgressIndicator()
+        }
 
         Column(
             modifier = modifier
@@ -253,10 +262,6 @@ fun LoginScreen(
                             .fillMaxWidth()
                             .padding(30.dp)
                     )
-
-                    if (isLoading == true) {
-                        CircularProgressIndicator()
-                    }
                 }
             }
         }
