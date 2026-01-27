@@ -1,5 +1,6 @@
 package com.example.epresensikemendespdt.ui.screens.profile
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,8 +14,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,32 +28,60 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Devices.PIXEL_3
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.epresensikemendespdt.R
+import com.example.epresensikemendespdt.data.local.token.TokenViewModel
+import com.example.epresensikemendespdt.data.remote.response.UserDetail
 
 @Composable
 fun ProfileScreen(
-
+    profileViewModel: ProfileViewModel,
+    tokenViewModel: TokenViewModel
 ){
-    ProfileContent(
-        nama = "Fulan bin Wulan",
-        idPegawai = "1234567890",
-        unitKerja = "Pusat Data dan Informasi Desa dan Daerah Tertinggal",
-        golongan = "Golongan XI",
-        jabatan = "Analis Program"
-    )
+    val token by tokenViewModel.getToken().observeAsState()
+    val userId by tokenViewModel.getUserid().observeAsState()
+    Log.e("ProfileScreen", userId.toString())
+
+    userId?.let {
+        LaunchedEffect(Unit) {
+            profileViewModel.getProfile(userId = userId.toString(), token = token.toString())
+        }
+    }
+
+    val profileResponse by profileViewModel.profileResponse.observeAsState()
+    val isLoading by profileViewModel.isLoading.observeAsState()
+    val errorMessage by profileViewModel.errorMessage.observeAsState()
+
+    when {
+        isLoading == true -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        errorMessage != null -> {
+            Text(
+                text = errorMessage ?: "Error",
+                color = Color.Red
+            )
+        }
+
+        profileResponse != null -> {
+            ProfileContent(
+                profileResponse!!.data
+            )
+        }
+    }
 }
 
 @Composable
 fun ProfileContent(
-    nama: String,
-    idPegawai: String,
-    unitKerja: String,
-    golongan: String,
-    jabatan: String,
+    userDetail: UserDetail,
     modifier: Modifier = Modifier
 ){
     Box(
@@ -73,18 +106,29 @@ fun ProfileContent(
                     .padding(top = 40.dp, bottom = 10.dp, start = 30.dp, end = 30.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Image(
-                    painterResource(id = R.drawable.iupp),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = modifier
+//                Image(
+//                    painterResource(id = R.drawable.iupp),
+//                    contentDescription = null,
+//                    contentScale = ContentScale.Crop,
+//                    modifier = modifier
+//                        .size(200.dp)
+//                        .clip(CircleShape)
+//                        .fillMaxWidth()
+//                )
+
+                val urlFoto = "http://103.125.203.88:8080/foto_pegawai/${userDetail.foto}"
+                AsyncImage(
+                    model = urlFoto,
+                    contentDescription = "Profile Photo",
+                    modifier = Modifier
                         .size(200.dp)
                         .clip(CircleShape)
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
+                    contentScale = ContentScale.Crop
                 )
 
                 Text(
-                    text = nama,
+                    text = userDetail.name,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
                     fontWeight = FontWeight.SemiBold,
@@ -124,7 +168,7 @@ fun ProfileContent(
                         )
 
                         Text(
-                            text = idPegawai,
+                            text = userDetail.enroll_number.toString(),
                             textAlign = TextAlign.Start,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -149,7 +193,7 @@ fun ProfileContent(
                         )
 
                         Text(
-                            text = unitKerja,
+                            text = userDetail.unitKerja,
                             textAlign = TextAlign.Start,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -175,7 +219,7 @@ fun ProfileContent(
                         )
 
                         Text(
-                            text = golongan,
+                            text = userDetail.golongan,
                             textAlign = TextAlign.Start,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -201,7 +245,7 @@ fun ProfileContent(
                         )
 
                         Text(
-                            text = jabatan,
+                            text = userDetail.jabatan,
                             textAlign = TextAlign.Start,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -214,14 +258,4 @@ fun ProfileContent(
             }
         }
     }
-}
-
-@Preview(
-    showBackground = true,
-    showSystemUi = true,
-    device = PIXEL_3,
-)
-@Composable
-fun ProfileScreenPreview(){
-    ProfileScreen()
 }

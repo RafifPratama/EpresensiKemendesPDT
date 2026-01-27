@@ -12,14 +12,13 @@ import kotlinx.coroutines.launch
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "token")
 
-class TokenViewModel (private val context: Context) : ViewModel() {
-    val pref = TokenPreferences.getInstance(context.dataStore)
+class TokenViewModel (private val pref: TokenPreferences) : ViewModel() {
 
     fun getToken() : LiveData<String> {
         return pref.getToken().asLiveData()
     }
 
-    fun userid() : LiveData<String> {
+    fun getUserid() : LiveData<String> {
         return pref.getUserId().asLiveData()
     }
 

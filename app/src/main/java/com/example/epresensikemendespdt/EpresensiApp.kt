@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.datastore.core.DataStore
-import androidx.datastore.dataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,6 +27,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.epresensikemendespdt.data.local.token.TokenPreferences
+import com.example.epresensikemendespdt.data.local.token.TokenViewModel
+import com.example.epresensikemendespdt.ui.ViewModelFactory
 import com.example.epresensikemendespdt.ui.navigation.NavigationItem
 import com.example.epresensikemendespdt.ui.navigation.Screen
 import com.example.epresensikemendespdt.ui.screens.home.HomeScreen
@@ -37,7 +38,7 @@ import com.example.epresensikemendespdt.ui.screens.login.LoginViewModelFactory
 import com.example.epresensikemendespdt.ui.screens.maps.MapScreen
 import com.example.epresensikemendespdt.ui.screens.presensi.PresensiScreen
 import com.example.epresensikemendespdt.ui.screens.profile.ProfileScreen
-import kotlin.math.log
+import com.example.epresensikemendespdt.ui.screens.profile.ProfileViewModel
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "token")
 
@@ -51,6 +52,10 @@ fun EpresensiApp(
 
     val context = LocalContext.current
     val pref = TokenPreferences.getInstance(context.dataStore)
+
+    val tokenViewModel : TokenViewModel = viewModel(
+        factory = ViewModelFactory(pref)
+    )
 
     Scaffold(
         bottomBar = {
@@ -141,7 +146,13 @@ fun EpresensiApp(
             }
 
             composable(Screen.Profile.route) {
-                ProfileScreen()
+                val profileViewModel : ProfileViewModel = viewModel(
+                    factory = ViewModelFactory(pref)
+                )
+                ProfileScreen(
+                    profileViewModel = profileViewModel,
+                    tokenViewModel = tokenViewModel
+                )
             }
 
             composable(Screen.Maps.route) {

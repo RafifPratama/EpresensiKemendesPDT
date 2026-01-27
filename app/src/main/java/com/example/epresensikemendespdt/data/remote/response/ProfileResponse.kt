@@ -1,8 +1,6 @@
 package com.example.epresensikemendespdt.data.remote.response
 
-import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
-import kotlinx.parcelize.Parcelize
 
 data class ProfileResponse(
     @field:SerializedName("success")
@@ -17,7 +15,7 @@ data class UserDetail(
     val id: Int,
 
     @field:SerializedName("enroll_number")
-    val enroll_number: Int,
+    val enroll_number: String,
 
     @field:SerializedName("name")
     val name: String,
