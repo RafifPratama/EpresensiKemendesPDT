@@ -86,8 +86,6 @@ fun AttendanceListScreen(
                 onYearSelected = { selectedYear = it }
             )
 
-            // Statistics Card
-
             // Attendance List
             if (attendanceList.isEmpty()) {
                 EmptyState()

@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.epresensikemendespdt.R
+import com.example.epresensikemendespdt.data.local.token.TokenViewModel
 
 @Composable
 fun HomeScreen(
@@ -50,14 +52,22 @@ fun HomeScreen(
     onToDaftarKehadrian: () -> Unit,
     onToPengajuanIzin: () -> Unit,
     onLogoutSuccess:() -> Unit,
-    homeViewModel: HomeViewModel = viewModel()
+    tokenViewModel: TokenViewModel,
+    homeViewModel: HomeViewModel = viewModel(),
 ){
     val uiState by homeViewModel.uiState.collectAsState()
 
+    val token by tokenViewModel.getToken().observeAsState()
+    val user_id by tokenViewModel.getUserid().observeAsState()
+
     NewHomeContent(
-        uiState,
-        onCheckPresensi,
-        onLogoutSuccess
+        uiState = uiState,
+        onCheckPresensi = onCheckPresensi,
+        onToDaftarKehadrian = onToDaftarKehadrian,
+        onToPengajuanIzin = onToPengajuanIzin,
+        onLogoutSuccess = onLogoutSuccess,
+        token = token.toString(),
+        user_id = user_id.toString()
     )
 }
 
@@ -65,7 +75,11 @@ fun HomeScreen(
 fun NewHomeContent(
     uiState: UiState,
     onCheckPresensi: () -> Unit,
-    onLogoutSuccess: () -> Unit
+    onToDaftarKehadrian: () -> Unit,
+    onToPengajuanIzin: () -> Unit,
+    onLogoutSuccess: () -> Unit,
+    token: String,
+    user_id: String
 ) {
     Box(
         modifier = Modifier
@@ -103,7 +117,10 @@ fun NewHomeContent(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                MenuItems()
+                MenuItems(
+                    onToDaftarKehadrian = onToDaftarKehadrian,
+                    onToPengajuanIzin = onToPengajuanIzin
+                )
             }
         }
     }
@@ -138,7 +155,8 @@ fun TopBar(
 
         // Logout Icon
         IconButton(
-            onClick = { onLogoutSuccess() },
+            onClick = {
+                onLogoutSuccess() },
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
@@ -415,19 +433,22 @@ fun StatCard(value: String, label: String, color: Color, modifier: Modifier = Mo
 }
 
 @Composable
-fun MenuItems() {
+fun MenuItems(
+    onToDaftarKehadrian: () -> Unit,
+    onToPengajuanIzin: () -> Unit
+) {
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         MenuItem(
             icon = Icons.Default.List,
             text = "Daftar kehadiran",
-            onClick = { /* Navigate to attendance list */ }
+            onClick = { onToDaftarKehadrian() }
         )
         MenuItem(
             icon = Icons.Default.Create,
             text = "Izin dan Perjalanan Dinas",
-            onClick = { /* Navigate to permits */ }
+            onClick = { onToPengajuanIzin() }
         )
     }
 }

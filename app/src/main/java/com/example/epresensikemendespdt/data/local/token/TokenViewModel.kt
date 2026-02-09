@@ -27,4 +27,10 @@ class TokenViewModel (private val pref: TokenPreferences) : ViewModel() {
             pref.saveSession(token, user_id)
         }
     }
+
+    fun clearSession() {
+        viewModelScope.launch {
+            pref.clearSession()
+        }
+    }
 }
